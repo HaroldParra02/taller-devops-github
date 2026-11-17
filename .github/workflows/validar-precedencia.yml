@@ -1,0 +1,39 @@
+
+name: Validar precedencia de ramas
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+
+permissions:
+  contents: read
+
+jobs:
+  validar-precedencia:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verificar origen y destino
+        env:
+          RAMA_ORIGEN: ${{ github.head_ref }}
+          RAMA_DESTINO: ${{ github.base_ref }}
+        shell: bash
+        run: |
+          echo "Origen: $RAMA_ORIGEN"
+          echo "Destino: $RAMA_DESTINO"
+
+          if [[ "$RAMA_DESTINO" == "main" && "$RAMA_ORIGEN" == "develop" ]]; then
+            echo "Permitido: develop hacia main"
+          elif [[ "$RAMA_DESTINO" == "develop" && "$RAMA_ORIGEN" == feature/* ]]; then
+            echo "Permitido: feature hacia develop"
+          else
+            echo "::error::Flujo de ramas no permitido"
+            exit 1
+          fi
